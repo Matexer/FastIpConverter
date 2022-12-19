@@ -115,10 +115,16 @@ FastIpConverter::IpRange inline FastIpConverter::getIpRange(const string &row) {
     auto dash_pos = getDashPosition(row);
 
     auto&& start = row.substr(0, dash_pos);
-    inet_pton(AF_INET, start.c_str(),&ipRange.start);
+    inet_pton(AF_INET, start.c_str(), &ipRange.start);
 
     auto&& end = row.substr(dash_pos + 1, row.length());
-    inet_pton(AF_INET, end.c_str(),&ipRange.end);
+    inet_pton(AF_INET, end.c_str(), &ipRange.end);
+
+    if (ntohl(ipRange.start.s_addr) > ntohl(ipRange.end.s_addr)) {
+        auto tmp = ipRange.start;
+        ipRange.start = ipRange.end;
+        ipRange.end = tmp;
+    }
 
     return ipRange;
 }
