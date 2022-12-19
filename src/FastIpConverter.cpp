@@ -62,12 +62,11 @@ void inline FastIpConverter::loadRangesfromFile(LinesListP rawLines) {
 
 bool inline FastIpConverter::isLineValid(const std::string &line)
 {
-    auto&& dash_pos = getDashPosition(line);
-
-    if (dash_pos == 0) {
-        return false;
+    if (line.find("-") == std::string::npos) {
+       return false;
     }
 
+    auto&& dash_pos = getDashPosition(line);
     auto&& start = line.substr(0, dash_pos);
     auto&& end = line.substr(dash_pos + 1, line.length());
 
