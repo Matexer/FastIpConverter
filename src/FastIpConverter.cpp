@@ -1,4 +1,5 @@
 #include "FastIpConverter.h"
+#include <arpa/inet.h>
 
 
 using namespace std;
@@ -46,7 +47,7 @@ void inline FastIpConverter::loadRangesfromFile(LinesListP rawLines) {
             string date = ctime(&time);
             cout << date.substr(0, date.find("\n")) << " - "
                  << "Skipped line " << i << ": '" << row
-                 << "' because is not a valid ip-range.\n";
+                 << "' because it is not a valid ip-range.\n";
 
             continue;
         }
@@ -97,7 +98,21 @@ shared_ptr<vector<string>> inline FastIpConverter::loadLines(const string inputF
 
 shared_ptr<vector<string>> inline FastIpConverter::getIps(const IpRange &ipRange) {
     uint32_t distance = ipRange.getDistance() + 1;
+
     auto ips = make_shared<vector<string>>();
+
+    if (distance > MAX_IP_RANGE) {
+      auto time = chrono::system_clock::to_time_t(chrono::system_clock::now());
+      string date = ctime(&time);
+      cout << date.substr(0, date.find("\n")) << " - "
+           << "Skipped range" << ": '"
+           << inet_ntoa(ipRange.start) << "-" << inet_ntoa(ipRange.end)
+           << "' because it is too wide "
+           << "(" << distance << " ips).\n";
+
+      return ips;
+    }
+
     ips->resize(distance);
 
     auto addr = ipRange.start;

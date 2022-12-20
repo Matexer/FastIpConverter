@@ -17,6 +17,9 @@
 #include <ctime>
 
 
+#define MAX_IP_RANGE 16777216
+
+
 class FastIpConverter
 {
     struct IpRange {
