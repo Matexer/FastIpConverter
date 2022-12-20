@@ -17,9 +17,6 @@
 #include <ctime>
 
 
-#define MAX_IP_RANGE 16777216
-
-
 class FastIpConverter
 {
     struct IpRange {
@@ -35,8 +32,6 @@ class FastIpConverter
 
     const std::string &inputFilePath;
     const std::string &outputFilePath;
-
-    struct sockaddr_in tmp_sockaddr;
 
     SinglesListP single;
     RangesListP range;
@@ -57,9 +52,9 @@ private:
 
     void loadRangesfromFile(LinesListP rawLines);
 
-    bool isLineValid(const std::string &line);
+    static bool isLineValid(const std::string &line);
 
-    bool isIpValid(const std::string &ip);
+    static bool isIpValid(const std::string &ip);
 
     static LinesListP loadLines(const std::string inputFilePath);
 
@@ -72,6 +67,8 @@ private:
     static uint8_t getDashPosition(const std::string &row);
 
     static std::string parseSingleIp(const std::string &row);
+
+    static std::string getTimestamp();
 };
 
 #endif // FASTIPCONVERTER_H

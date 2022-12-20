@@ -2,6 +2,11 @@
 #include <arpa/inet.h>
 
 
+#define MAX_IP_RANGE 16777216
+#define TIMESTAMP_FORMAT "%Y-%m-%d %H:%M:%S"
+#define TIMESTAMP_SIZE 20
+
+
 using namespace std;
 
 
@@ -23,11 +28,14 @@ void FastIpConverter::convert()
 void inline FastIpConverter::saveToFile() {
     ofstream outFile(this->outputFilePath);
 
-    for (const auto &row : *this->single) outFile << "host " << row << ",\n";
+    for (const auto &row : *this->single) {
+        outFile << "host " << row << ",\n";
+    }
 }
 
 bool FastIpConverter::fileExists(const string &path) {
     struct stat buffer;
+
     return (stat (path.c_str(), &buffer) == 0);
 }
 
@@ -43,9 +51,7 @@ void inline FastIpConverter::loadRangesfromFile(LinesListP rawLines) {
         auto&& row = rawLines->at(i);
 
         if (!isLineValid(row)) {
-            auto time = chrono::system_clock::to_time_t(chrono::system_clock::now());
-            string date = ctime(&time);
-            cout << date.substr(0, date.find("\n")) << " - "
+            cout << getTimestamp() << " - "
                  << "Skipped line " << i << ": '" << row
                  << "' because it is not a valid ip-range.\n";
 
@@ -80,7 +86,9 @@ bool inline FastIpConverter::isLineValid(const std::string &line)
 
 bool inline FastIpConverter::isIpValid(const std::string &ip)
 {
-    return inet_pton(AF_INET, ip.c_str(), &(this->tmp_sockaddr.sin_addr)) != 0;
+    struct sockaddr_in tmp_sockaddr;
+
+    return inet_pton(AF_INET, ip.c_str(), &(tmp_sockaddr.sin_addr)) != 0;
 }
 
 shared_ptr<vector<string>> inline FastIpConverter::loadLines(const string inputFilePath) {
@@ -88,8 +96,7 @@ shared_ptr<vector<string>> inline FastIpConverter::loadLines(const string inputF
     auto output = make_shared<vector<string>>();
 
     string line;
-    while (std::getline(file_in, line))
-    {
+    while (std::getline(file_in, line)) {
         output->push_back(line);
     }
 
@@ -98,13 +105,10 @@ shared_ptr<vector<string>> inline FastIpConverter::loadLines(const string inputF
 
 shared_ptr<vector<string>> inline FastIpConverter::getIps(const IpRange &ipRange) {
     uint32_t distance = ipRange.getDistance() + 1;
-
     auto ips = make_shared<vector<string>>();
 
     if (distance > MAX_IP_RANGE) {
-      auto time = chrono::system_clock::to_time_t(chrono::system_clock::now());
-      string date = ctime(&time);
-      cout << date.substr(0, date.find("\n")) << " - "
+      cout << getTimestamp() << " - "
            << "Skipped range" << ": '"
            << inet_ntoa(ipRange.start) << "-" << inet_ntoa(ipRange.end)
            << "' because it is too wide "
@@ -122,6 +126,7 @@ shared_ptr<vector<string>> inline FastIpConverter::getIps(const IpRange &ipRange
         ips->at(i) = inet_ntoa(addr);
         addr_ntohl++;
     }
+
     return ips;
 }
 
@@ -162,6 +167,15 @@ uint8_t inline FastIpConverter::getDashPosition(const string &row) {
 string inline FastIpConverter::parseSingleIp(const string &row) {
     auto&& dash_pos = getDashPosition(row);
     return row.substr(0, dash_pos);
+}
+
+string inline FastIpConverter::getTimestamp()
+{
+    auto time = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    char tmp_time[TIMESTAMP_SIZE];
+    strftime(tmp_time, TIMESTAMP_SIZE, TIMESTAMP_FORMAT, gmtime(&time));
+    std::string timeStr(tmp_time);
+    return timeStr;
 }
 
 u_int32_t FastIpConverter::IpRange::getDistance() const {
