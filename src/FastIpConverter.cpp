@@ -52,7 +52,7 @@ void inline FastIpConverter::loadRangesfromFile(LinesListP rawLines) {
 
         if (!isLineValid(row)) {
             cout << getTimestamp() << " - "
-                 << "Skipped line " << i << ": '" << row
+                 << "Skipped line " << i + 1 << ": '" << row
                  << "' because it is not a valid ip-range.\n";
 
             continue;
